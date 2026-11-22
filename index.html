@@ -3078,7 +3078,9 @@
         `Your clothes are ready at *${settings.shopName}* (Bill *${o.id}*).`,
         due > 0 ? `Pending Amount: *${fmtINR(due)}*` : `Payment: Full Paid`,
         upiLine,
-        `Phone: ${settings.shopPhone}`
+        `Phone: ${settings.shopPhone}`,
+            `\nLoved our care? Please leave us a quick Google review:\nhttps://g.page/r/CYyGyqiUlBYhEBM/review`
+        
       ].filter(Boolean).join("\n");
       const ph = waPhone(o.phone);
       window.open(ph ? `https://wa.me/${ph}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
