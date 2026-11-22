@@ -3090,7 +3090,7 @@ function sendDeliveredWhatsapp(orderId) {
   if (!o) return;
   const text = [
     `Hello *${o.customerName}*,`,
-    `Your order (Bill #${o.billNo}) from *${settings.shopName}* has been delivered.`,
+    `Your order *#${o.id}* from *${settings.shopName}* has been delivered.`,
     `Phone: ${settings.shopPhone}`,
     `\nLoved our care? Please leave us a quick Google review:\nhttps://g.page/r/CYyGyqiUlBYhEBM/review`
   ].filter(Boolean).join("\n");
