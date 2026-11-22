@@ -2795,6 +2795,8 @@
       closeActionModal();
       renderOrders();
       showToast(markDelivered ? `${o.id} Delivered` : `Saved ${fmtINR(amt)} (${mode})`);
+        if (markDelivered) sendDeliveredWhatsapp(orderId);
+      
     }
 
     // 1-TAP CLEAR DUE (UDHAAR)
