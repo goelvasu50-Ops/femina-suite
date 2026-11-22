@@ -1580,6 +1580,8 @@
       localStorage.setItem("fd_counter", String(orderCounter));
       if (cashbookPin) localStorage.setItem("fd_cashbook_pin", cashbookPin);
       else localStorage.removeItem("fd_cashbook_pin");
+      if (typeof window.saveCloud === "function") window.saveCloud();
+  
     }
     function jsArg(val) {
       return JSON.stringify(String(val ?? "")).replace(/'/g, "\\u0027").replace(/</g, "\\u003c");
@@ -3641,5 +3643,75 @@
       renderOrders();
     })();
   </script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGw-9uNBNgn8xp4oLShlVL2CfKJmPJy7Q",
+    authDomain: "femina-desk.firebaseapp.com",
+    projectId: "femina-desk",
+    storageBucket: "femina-desk.firebasestorage.app",
+    messagingSenderId: "263571985699",
+    appId: "1:263571985699:web:1226e478b55900eed92896",
+    measurementId: "G-Q6Q5BSMRHG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const shopRef = doc(db, "shops", "femina-dry-cleaners-gonda");
+
+  window.saveCloud = async function () {
+    try {
+      await setDoc(shopRef, {
+        settings,
+        garmentRates,
+        addonRates,
+        orders,
+        transactions,
+        orderCounter,
+        cashbookPin,
+        updatedAt: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      console.error("Cloud save failed:", e);
+    }
+  };
+
+  onSnapshot(shopRef, (snap) => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+    if (Array.isArray(d.orders)) {
+      orders = d.orders;
+      localStorage.setItem("fd_orders", JSON.stringify(orders));
+    }
+    if (Array.isArray(d.transactions)) {
+      transactions = d.transactions;
+      localStorage.setItem("fd_transactions", JSON.stringify(transactions));
+    }
+    if (d.settings) {
+      settings = { ...settings, ...d.settings };
+      localStorage.setItem("fd_settings", JSON.stringify(settings));
+    }
+    if (d.garmentRates) {
+      garmentRates = d.garmentRates;
+      localStorage.setItem("fd_garmentRates", JSON.stringify(garmentRates));
+    }
+    if (d.addonRates) {
+      addonRates = d.addonRates;
+      localStorage.setItem("fd_addonRates", JSON.stringify(addonRates));
+    }
+    if (typeof d.orderCounter === "number" && d.orderCounter > orderCounter) {
+      orderCounter = d.orderCounter;
+      localStorage.setItem("fd_orderCounter", String(orderCounter));
+    }
+    if (typeof d.cashbookPin === "string") {
+      cashbookPin = d.cashbookPin;
+      localStorage.setItem("fd_cashbookPin", cashbookPin);
+    }
+    if (typeof renderApp === "function") renderApp();
+  });
+  </script>
+  
 </body>
 </html>
