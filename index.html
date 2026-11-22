@@ -3078,14 +3078,24 @@
         `Your clothes are ready at *${settings.shopName}* (Bill *${o.id}*).`,
         due > 0 ? `Pending Amount: *${fmtINR(due)}*` : `Payment: Full Paid`,
         upiLine,
-        `Phone: ${settings.shopPhone}`,
-            `\nLoved our care? Please leave us a quick Google review:\nhttps://g.page/r/CYyGyqiUlBYhEBM/review`
-        
+        `Phone: ${settings.shopPhone}`
       ].filter(Boolean).join("\n");
       const ph = waPhone(o.phone);
       window.open(ph ? `https://wa.me/${ph}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
     }
-
+function sendDeliveredWhatsapp(orderId) {
+  const o = orders.find(x => x.id === orderId);
+  if (!o) return;
+  const text = [
+    `Hello *${o.customerName}*,`,
+    `Your order (Bill #${o.billNo}) from *${settings.shopName}* has been delivered.`,
+    `Phone: ${settings.shopPhone}`,
+    `\nLoved our care? Please leave us a quick Google review:\nhttps://g.page/r/CYyGyqiUlBYhEBM/review`
+  ].filter(Boolean).join("\n");
+  const ph = waPhone(o.phone);
+  window.open(ph ? `https://wa.me/${ph}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    }
+    
     // ============================================================
     // PRINTABLE BILL & CLOTH TAGS
     // ============================================================
