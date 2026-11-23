@@ -1320,9 +1320,14 @@
             <input type="tel" id="setShopPhone" />
           </div>
           <div class="field">
-            <label>Bill Prefix</label>
-            <input type="text" id="setOrderPrefix" />
-          </div>
+  <label>Bill Prefix</label>
+  <input type="text" id="setOrderPrefix" />
+</div>
+</div>
+<div class="field">
+  <label>Next Bill Serial No.</label>
+  <input type="number" id="setOrderCounter" min="1" step="1" />
+          
         </div>
         <div class="field">
           <label>Bill Bottom Line</label>
@@ -3569,7 +3574,9 @@ function sendDeliveredWhatsapp(orderId) {
       document.getElementById("setShopAddress").value = settings.shopAddress;
       document.getElementById("setShopPhone").value = settings.shopPhone;
       document.getElementById("setOrderPrefix").value = settings.orderPrefix;
-      document.getElementById("setFooterNote").value = settings.footerNote;
+      document.getElementById("setFooterNote").value = settings.footerNote;document.getElementById("setOrderCounter").value = orderCounter;
+document.getElementById("setOrderCounter").value = orderCounter;
+    
 
       const photos = await getAllPhotosFromDB();
       document.getElementById("storageStats").textContent =
@@ -3582,6 +3589,16 @@ function sendDeliveredWhatsapp(orderId) {
       settings.shopAddress = document.getElementById("setShopAddress").value.trim();
       settings.shopPhone = document.getElementById("setShopPhone").value.trim() || DEFAULT_SETTINGS.shopPhone;
       settings.orderPrefix = (document.getElementById("setOrderPrefix").value.trim() || "FDC").toUpperCase();
+      const nextSerial = parseInt(document.getElementById("setOrderCounter").value, 10);
+if (Number.isFinite(nextSerial) && nextSerial >= 1) {
+  orderCounter = nextSerial;
+  const previewEl = document.getElementById("nextOrderPreview");
+  if (previewEl) {
+    delete previewEl.dataset.customBill;
+    previewEl.textContent = `${settings.orderPrefix || "NO."}-${orderCounter}`;
+  }
+    }
+      
       settings.footerNote = document.getElementById("setFooterNote").value.trim() || DEFAULT_SETTINGS.footerNote;
       persistAll();
       updateDateBanner();
