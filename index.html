@@ -2383,7 +2383,11 @@
       }
 
       // NEW BILL
-      targetOrderId = `${settings.orderPrefix}-${orderCounter++}`;
+      const previewEl = document.getElementById("nextOrderPreview");
+const typedBillNo = (previewEl ? previewEl.textContent : "").trim();
+targetOrderId = typedBillNo || `${settings.orderPrefix}-${orderCounter++}`;
+    
+                                                 
       const savedPhotoRefs = [];
       for (const p of draftPhotos) {
         await savePhotoToDB({ ...p, orderId: targetOrderId });
