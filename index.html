@@ -984,7 +984,8 @@
           <div class="card-title"><span class="step-num">1</span> Customer</div>
           <div style="display:flex; align-items:center; gap:6px;">
             <button type="button" class="btn btn-sm btn-soft" onclick="fillWalkInCustomer()" title="Quick bill without phone or name">Walk-In</button>
-            <span class="order-id" id="nextOrderPreview">FDC-1001</span>
+             <span class="order-id" id="nextOrderPreview" contenteditable="true" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">FDC-1001</span>
+            
           </div>
         </div>
 
