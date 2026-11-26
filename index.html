@@ -854,7 +854,7 @@
         background: #fff !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-      }
+      @media print {
       body * { visibility: hidden; }
       #printArea, #printArea * {
         visibility: visible;
@@ -871,6 +871,7 @@
         font-family: monospace, sans-serif;
         background: #fff;
       }
+    }
       #printArea.print-mode-bill {
         width: 50mm;
         padding: 2mm 1.5mm;
