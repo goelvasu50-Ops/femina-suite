@@ -1,6 +1,6 @@
 {
-  "name": "Femina Desk \u2014 Femina Dry Cleaners",
-  "short_name": "Femina Desk",
+  "name": "Femina Suite \u2014 Femina Dry Cleaners",
+  "short_name": "Femina Suite",
   "description": "Simple, classy shop app for Femina Dry Cleaners \u2014 billing, walk-in, dual services, photos, rack tags, PIN-locked cashbook & offline use.",
   "start_url": "./index.html",
   "scope": "./",
