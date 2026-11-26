@@ -844,17 +844,59 @@
     }
     .pin-key-spacer { pointer-events: none; }
 
-    /* Print */
+        /* Print */
     #printArea { display: none; }
     @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea {
-        display: block !important; position: absolute; left: 0; top: 0; width: 100%;
-        padding: 10px; font-family: monospace, sans-serif; color: #000; background: #fff;
+      @page { margin: 0; }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
-      .print-tag-card { border: 2px dashed #000; padding: 10px; margin-bottom: 10px; page-break-inside: avoid; }
+      body * { visibility: hidden; }
+      #printArea, #printArea * {
+        visibility: visible;
+        color: #000 !important;
+        border-color: #000 !important;
+      }
+      #printArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding: 0;
+        margin: 0;
+        font-family: monospace, sans-serif;
+        background: #fff;
+      }
+      #printArea.print-mode-bill {
+        width: 50mm;
+        padding: 2mm 1.5mm;
+      }
+      #printArea.print-mode-tag {
+        width: 50mm;
+      }
+      .print-tag-card {
+        width: 50mm;
+        height: 25mm;
+        box-sizing: border-box;
+        padding: 1.8mm 2.5mm 1.8mm 5mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+      }
+      .print-tag-card:last-child {
+        page-break-after: avoid;
+        break-after: auto;
+      }
     }
+    
   </style>
 </head>
 <body>
@@ -873,6 +915,8 @@
         </div>
       </div>
       <div class="topbar-actions">
+                <button class="pill-toggle" onclick="openQuickTagModal()" title="Print Cloth Tags">Tags</button>
+        
         <button class="pill-toggle" id="btnTextSize" onclick="toggleLargeText()" title="Bigger text">A+</button>
         <button class="btn-install" id="btnInstallApp" onclick="handleInstallClick()">
           <svg class="ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1400,7 +1444,31 @@
       </div>
     </div>
   </div>
-
+    <!-- Quick Tag Modal (No Bill Required) -->
+  <div class="modal-backdrop" id="quickTagModal">
+    <div class="modal" style="max-width:360px;">
+      <div class="card-header" style="margin-bottom:10px;">
+        <div class="card-title">Print Cloth Tags (50×25mm)</div>
+        <button class="btn btn-sm btn-outline" onclick="closeQuickTagModal()">✕</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Slip / Tag Number</label>
+          <input type="text" id="qtNumber" class="input" placeholder="e.g. 2003" />
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Total Clothes (Tags to Print)</label>
+          <input type="number" id="qtCount" class="input" value="1" min="1" max="50" />
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Second Line / Code / Date (Optional)</label>
+          <input type="text" id="qtNote" class="input" placeholder="e.g. 819 or Del: 30/11" />
+        </div>
+        <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="printQuickTags()">Print Tags</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- Hidden Print Container -->
   <div id="printArea"></div>
 
@@ -3111,6 +3179,57 @@ function sendDeliveredWhatsapp(orderId) {
     // ============================================================
     // PRINTABLE BILL & CLOTH TAGS
     // ============================================================
+    function setDynamicPageSize(sizeCss) {
+      let tag = document.getElementById("dynamicPrintPageStyle");
+      if (!tag) {
+        tag = document.createElement("style");
+        tag.id = "dynamicPrintPageStyle";
+        document.head.appendChild(tag);
+      }
+      tag.textContent = `@media print { @page { size: ${sizeCss}; margin: 0; } }`;
+    }
+
+    function openQuickTagModal() {
+      document.getElementById("quickTagModal").classList.add("open");
+      setTimeout(() => document.getElementById("qtNumber").focus(), 50);
+    }
+
+    function closeQuickTagModal() {
+      document.getElementById("quickTagModal").classList.remove("open");
+    }
+
+    function printQuickTags() {
+      const slip = (document.getElementById("qtNumber").value || "").trim();
+      const count = Math.max(1, Math.min(50, parseInt(document.getElementById("qtCount").value, 10) || 1));
+      const note = (document.getElementById("qtNote").value || "").trim();
+      if (!slip) {
+        showToast("Enter a slip or tag number first");
+        return;
+      }
+      const area = document.getElementById("printArea");
+      area.className = "print-mode-tag";
+      setDynamicPageSize("50mm 25mm");
+
+      let html = "";
+      for (let k = 1; k <= count; k++) {
+        html += `
+          <div class="print-tag-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:900; font-size:16px; line-height:1.1;">
+              <span>${esc(slip)}</span><span>${k}/${count}</span>
+            </div>
+            <div style="font-size:13px; font-weight:800; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              ${note ? esc(note) : esc(settings.shopName || "Femina Dry Cleaners")}
+            </div>
+            <div style="font-size:10px; font-weight:700; line-height:1.1;">
+              ${esc(settings.orderPrefix || "FDC")} • ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit" })}
+            </div>
+          </div>`;
+      }
+      area.innerHTML = html;
+      closeQuickTagModal();
+      window.print();
+    }
+
     function printOrder(orderId, mode) {
       const o = orders.find(x => x.id === orderId);
       if (!o) return;
@@ -3118,35 +3237,39 @@ function sendDeliveredWhatsapp(orderId) {
       const due = Math.max(0, (Number(o.total) || 0) - (Number(o.paid) || 0));
 
       if (mode === "bill") {
+        area.className = "print-mode-bill";
+        setDynamicPageSize("58mm auto");
         area.innerHTML = `
-          <div style="max-width:340px; margin:0 auto; font-size:13px; line-height:1.45;">
-            <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:8px;">
-              <div style="font-size:18px; font-weight:900;">${esc(settings.shopName)}</div>
-              ${settings.shopAddress ? `<div>${esc(settings.shopAddress)}</div>` : ""}
-              <div>Phone: ${esc(settings.shopPhone)}</div>
+          <div style="width:100%; font-size:12px; font-weight:700; line-height:1.35; color:#000;">
+            <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:5px; margin-bottom:6px;">
+              <div style="font-size:16px; font-weight:900; letter-spacing:0.3px;">${esc(settings.shopName)}</div>
+              ${settings.shopAddress ? `<div style="font-size:11px;">${esc(settings.shopAddress)}</div>` : ""}
+              <div style="font-size:11px;">Ph: ${esc(settings.shopPhone)}</div>
             </div>
-            <div><b>Bill:</b> ${esc(o.id)} ${o.urgent ? "(Urgent)" : ""}</div>
+            <div><b>Bill:</b> ${esc(o.id)} ${o.urgent ? "(URGENT)" : ""}</div>
             <div><b>Name:</b> ${esc(o.customerName)} (${esc(o.phone || "-")})</div>
-            <div><b>Date:</b> ${esc(o.createdDate)} | <b>Delivery:</b> ${esc(o.deliveryDate)}</div>
+            <div><b>In:</b> ${esc(o.createdDate)} | <b>Del:</b> ${esc(o.deliveryDate)}</div>
             ${o.rackTag ? `<div><b>Rack:</b> ${esc(o.rackTag)}</div>` : ""}
-            <hr/>
+            <div style="border-top:1px dashed #000; margin:5px 0;"></div>
             ${o.items.map((i, idx) => `
-              <div style="display:flex; justify-content:space-between;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
                 <span>${idx + 1}. ${i.qty}x ${esc(i.name)} (${esc(formatItemServiceLabel(i))})</span>
-                <span>${fmtINR((i.qty || 1) * getItemUnitPrice(i))}</span>
+                <span style="font-weight:900;">${fmtINR((i.qty || 1) * getItemUnitPrice(i))}</span>
               </div>
             `).join("")}
-            <hr/>
-            ${o.urgentFee ? `<div style="display:flex; justify-content:space-between;"><span>Urgent Charge:</span><span>${fmtINR(o.urgentFee)}</span></div>` : ""}
+            <div style="border-top:1px dashed #000; margin:5px 0;"></div>
+            ${o.urgentFee ? `<div style="display:flex; justify-content:space-between;"><span>Urgent:</span><span>${fmtINR(o.urgentFee)}</span></div>` : ""}
             ${o.discount ? `<div style="display:flex; justify-content:space-between;"><span>Discount:</span><span>-${fmtINR(o.discount)}</span></div>` : ""}
-            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:15px;"><span>TOTAL:</span><span>${fmtINR(o.total)}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px; border-top:1px solid #000; padding-top:3px;"><span>TOTAL:</span><span>${fmtINR(o.total)}</span></div>
             <div style="display:flex; justify-content:space-between;"><span>Paid:</span><span>${fmtINR(o.paid)}</span></div>
-            <div style="display:flex; justify-content:space-between; font-weight:900;"><span>PENDING:</span><span>${fmtINR(due)}</span></div>
-            ${(due > 0 && settings.shopUpi && settings.shopUpi.trim()) ? `<div style="margin-top:6px; font-size:12px;"><b>UPI ID:</b> ${esc(settings.shopUpi.trim())}</div>` : ""}
-            ${o.photos && o.photos.length ? `<div style="margin-top:6px; font-size:11px;">* Stain/tear photo saved (${o.photos.length}).</div>` : ""}
-            <div style="text-align:center; margin-top:10px; font-size:11px; border-top:1px dashed #000; padding-top:6px;">${esc(settings.footerNote)}</div>
+            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:13px;"><span>PENDING:</span><span>${fmtINR(due)}</span></div>
+            ${(due > 0 && settings.shopUpi && settings.shopUpi.trim()) ? `<div style="margin-top:5px; font-size:11px;"><b>UPI:</b> ${esc(settings.shopUpi.trim())}</div>` : ""}
+            ${o.photos && o.photos.length ? `<div style="margin-top:4px; font-size:10px;">* Stain/tear photo saved (${o.photos.length}).</div>` : ""}
+            <div style="text-align:center; margin-top:8px; font-size:11px; border-top:1px dashed #000; padding-top:5px;">${esc(settings.footerNote)}</div>
           </div>`;
       } else {
+        area.className = "print-mode-tag";
+        setDynamicPageSize("50mm 25mm");
         const totalPcs = o.items.reduce((s, i) => s + (Number(i.qty) || 1), 0);
         let pcNum = 0, html = "";
         o.items.forEach(i => {
@@ -3155,21 +3278,25 @@ function sendDeliveredWhatsapp(orderId) {
           for (let k = 0; k < q; k++) {
             pcNum++;
             html += `
-              <div class="print-tag-card" style="max-width:260px;">
-                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px;">
+              <div class="print-tag-card">
+                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px; line-height:1.1;">
                   <span>${esc(o.id)}</span><span>${pcNum}/${totalPcs}</span>
                 </div>
-                <div style="font-size:14px; font-weight:800; margin-top:3px;">${esc(o.customerName)}</div>
-                <div style="font-size:14px; margin-top:2px;"><b>${esc(i.name)}</b> — ${esc(svc)}</div>
-                ${i.note ? `<div style="font-size:12px;">Note: ${esc(i.note)}</div>` : ""}
-                <div style="font-size:12px; margin-top:4px;">Delivery: ${esc(o.deliveryDate)} ${o.urgent ? "• Urgent" : ""} ${o.rackTag ? "• Rack " + esc(o.rackTag) : ""}</div>
+                <div style="font-size:11px; font-weight:800; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${esc(o.customerName)} • <b>${esc(i.name)}</b> (${esc(svc)})
+                </div>
+                <div style="font-size:10px; font-weight:700; line-height:1.1;">
+                  Del: ${esc(o.deliveryDate)} ${o.urgent ? "• URGENT" : ""} ${o.rackTag ? "• R:" + esc(o.rackTag) : ""}
+                </div>
               </div>`;
           }
         });
         area.innerHTML = html;
       }
+
       window.print();
     }
+    
 
     // ============================================================
     // CASHBOOK 4-DIGIT PIN LOCK ENGINE
