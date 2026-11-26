@@ -3191,12 +3191,12 @@ function sendDeliveredWhatsapp(orderId) {
     }
 
     function openQuickTagModal() {
-      document.getElementById("quickTagModal").classList.add("open");
+      document.getElementById("quickTagModal").classList.add("show");
       setTimeout(() => document.getElementById("qtNumber").focus(), 50);
     }
 
     function closeQuickTagModal() {
-      document.getElementById("quickTagModal").classList.remove("open");
+      document.getElementById("quickTagModal").classList.remove("show");
     }
 
     function printQuickTags() {
